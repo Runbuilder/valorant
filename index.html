@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Click Game with Enhanced Sound Effects</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        #gameBoard {
+            border: 2px solid #000;
+            background-image: url('https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt606ff33931d4ea39/5fd3eb0690483e3eb51c376b/Icebox_V1.jpg');
+            background-size: cover;
+            position: relative;
+            overflow: hidden;
+            width: 600px;
+            height: 600px;
+        }
+
+        #target {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.5s; /* Animation effect */
+            display: none; /* 초기 상태에서 표적 숨김 */
+        }
+
+        #scoreBoard, #timerBoard {
+            position: fixed;
+            font-size: 20px;
+            color: #000;
+        }
+
+        #scoreBoard {
+            top: 20px;
+            left: 20px;
+        }
+
+        #timerBoard {
+            top: 20px;
+            right: 20px;
+        }
+
+        #startButton {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            z-index: 10; /* 버튼이 항상 위에 보이도록 설정 */
+        }
+    </style>
+</head>
+<body>
+    <div id="gameBoard">
+        <img id="target" src="" alt="Pokemon">
+    </div>
+    <div id="scoreBoard">Score: <span id="score">0</span></div>
+    <div id="timerBoard">Time left: <span id="timeLeft">20</span>s</div>
+    <button id="startButton" style="position: fixed;">게임 시작</button>
+    <audio id="clickSound" src="https://res.cloudinary.com/djzf2mipa/video/upload/v1707637874/AiClass/tang_wm1cds.mp3"></audio>
+    <audio id="hitSound" src="https://res.cloudinary.com/djzf2mipa/video/upload/v1707638140/AiClass/uk_dmmxme.mp3"></audio>
+    <audio id="gameStartSound" src="https://res.cloudinary.com/djzf2mipa/video/upload/v1707639098/AiClass/gamestart_aczexa.mp3"></audio>
+    <audio id="backgroundMusic" src="https://res.cloudinary.com/djzf2mipa/video/upload/v1707637487/AiClass/valo_tszqbr.mp3" ></audio>
+    <audio id="gameOverSound" src="https://res.cloudinary.com/djzf2mipa/video/upload/v1707635833/AiClass/ending_upg5wk.mp3"></audio>
+    <script>
+        const target = document.getElementById('target');
+        const scoreDisplay = document.getElementById('score');
+        const timeLeftDisplay = document.getElementById('timeLeft');
+        const startButton = document.getElementById('startButton');
+        const gameStartSound = document.getElementById('gameStartSound');
+        const clickSound = document.getElementById('clickSound');
+        const hitSound = document.getElementById('hitSound');
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const gameOverSound = document.getElementById('gameOverSound');
+        let score = 0;
+        let timeLeft = 20;
+        let gameTimer;
+
+        startButton.onclick = function() {
+            gameStartSound.play(); // 게임 시작 음원 재생
+            startGame();
+        };
+
+        function startGame() {
+            startButton.style.display = 'none'; // 게임 시작 버튼 숨김
+            resetGame();
+        }
+
+        function fetchPokemon() {
+            const pokemonId = Math.floor(Math.random() * 150) + 1;
+            fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const pokemonImage = data.sprites.other.dream_world.front_default;
+                    if (pokemonImage) {
+                        target.src = pokemonImage;
+                        target.style.display = "block";
+                        moveTarget();
+                    }
+                }).catch(error => console.error("Failed to fetch Pokemon:", error));
+        }
+
+        function moveTarget() {
+            const gameBoard = document.getElementById('gameBoard');
+            const x = Math.random() * (gameBoard.offsetWidth - target.offsetWidth);
+            const y = Math.random() * (gameBoard.offsetHeight - target.offsetHeight);
+            target.style.left = x + 'px';
+            target.style.top = y + 'px';
+        }
+
+        function updateTimer() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                timeLeftDisplay.innerText = timeLeft;
+            } else {
+                clearInterval(gameTimer);
+                gameOverSound.play();
+                // backgroundMusic.pause();
+                target.style.display = "none";
+                showStartButton(); // 게임 종료 후 시작 버튼 다시 표시
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            timeLeft = 20;
+            scoreDisplay.innerText = score;
+            timeLeftDisplay.innerText = timeLeft;
+            fetchPokemon();
+            if (gameTimer) clearInterval(gameTimer);
+            gameTimer = setInterval(updateTimer, 1000);
+            // backgroundMusic.play();
+        }
+
+        function showStartButton() {
+            startButton.style.display = 'block'; // 시작 버튼 표시
+        }
+
+        target.addEventListener('click', function() {
+            score += 1;
+            scoreDisplay.innerText = score;
+            hitSound.play();
+            target.style.transform = 'scale(1.5)';
+            setTimeout(() => target.style.transform = 'scale(1)', 500);
+            fetchPokemon();
+        });
+    </script>
+</body>
+</html>
